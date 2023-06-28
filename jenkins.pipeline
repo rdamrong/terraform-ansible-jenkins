@@ -1,0 +1,21 @@
+pipeline {
+    agent any
+    
+    stages {
+        stage('Clone') {
+            steps {
+                git branch: 'main', url: 'https://github.com/rdamrong/terraform-ansible-jenkins.git'
+            }
+        }
+        stage('Init') {
+            steps {
+                sh label: '', script: 'terraform init -no-color'
+            }
+        }
+        stage('Apply') {
+            steps {
+                sh label: '', script: 'terraform apply -var="vm_name=$VM_NAME" --auto-approve  -no-color'
+            }
+        }
+    }
+}
