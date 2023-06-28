@@ -6,10 +6,13 @@ terraform {
     }
   }
 }
-
+variable vm_name {}
 resource "ansible_playbook" "playbook" {
   playbook   = "test.yaml"
   name       = "localhost"
+  extra_vars = {
+    vm_name = var.vm_name
+  }
 }
 
 output "result" {
