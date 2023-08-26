@@ -1,20 +1,55 @@
-terraform {
-  required_providers {
-    ansible = {
-      version = "~> 1.1.0"
-      source  = "ansible/ansible"
-    }
-  }
+provider "aws" {
+  region = "ap-southeast-1"
 }
-variable vm_name {}
-resource "ansible_playbook" "playbook" {
-  playbook   = "test.yaml"
-  name       = "localhost"
-  extra_vars = {
-    vm_name = var.vm_name
+
+resource "aws_key_pair" "student-key" {
+  key_name   = "student-key"
+  public_key = file("/Users/drs/.ssh/id_rsa.pub")
+}
+
+
+resource "aws_instance" "app_server" {
+  ami           = "ami-0bee6b4258f1faee4"
+  instance_type = "t2.micro"
+    vpc_security_group_ids = [aws_security_group.sg-appserv.id]
+  key_name = "student-key"
+
+  tags = {
+    Name = "lab24-0"
+
   }
 }
 
-output "result" {
- value = ansible_playbook.playbook.ansible_playbook_stdout
+resource "aws_security_group" "sg-appserv" {
+  name        = "sg_appserv"
+  description = "AppServ Security Group"
+  ingress {
+    description      = "SSH Access"
+    from_port        = 0
+    to_port          = 22
+    protocol         = "tcp"
+    cidr_blocks      = ["0.0.0.0/0"]
+    ipv6_cidr_blocks = ["::/0"]
+  }
+
+  ingress {
+    description      = "HTTP Access"
+    from_port        = 0
+    to_port          = 80
+    protocol         = "tcp"
+    cidr_blocks      = ["0.0.0.0/0"]
+    ipv6_cidr_blocks = ["::/0"]
+  }
+  egress {
+    from_port        = 0
+    to_port          = 0
+    protocol         = "-1"
+    cidr_blocks      = ["0.0.0.0/0"]
+    ipv6_cidr_blocks = ["::/0"]
+  }
+
+  tags = {
+    Name = "allow_appserv"
+  }
 }
+
