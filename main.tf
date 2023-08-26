@@ -1,3 +1,8 @@
+terraform {
+   backend "pg" {}
+}
+
+
 provider "aws" {
   region = "ap-southeast-1"
 }
