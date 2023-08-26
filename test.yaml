@@ -1,7 +1,0 @@
----
-- hosts: all
-  connection: local
-  gather_facts: false
-  tasks:
-    - ansible.builtin.debug:
-        msg: "Hello {{ vm_name }}"
