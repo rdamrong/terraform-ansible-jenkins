@@ -16,12 +16,12 @@ resource "aws_key_pair" "student-key" {
 resource "aws_instance" "app_server" {
   ami           = "ami-0bee6b4258f1faee4"
   instance_type = "t2.micro"
-    vpc_security_group_ids = [aws_security_group.sg-appserv.id]
+  vpc_security_group_ids = [aws_security_group.sg-appserv.id]
   key_name = "student-key"
-
-  tags = {
-    Name = "lab24-0"
-
+  provisioner "local-exec" {
+    command = <<EOT
+       sleep 30;
+    EOT
   }
 }
 
