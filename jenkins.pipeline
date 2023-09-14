@@ -1,21 +1,41 @@
 pipeline {
     agent any
-    
+    environment {
+        AWS_ACCESS_KEY_ID = credentials("AWS_ACCESS_KEY_ID")
+        AWS_SECRET_ACCESS_KEY = credentials("AWS_SECRET_ACCESS_KEY")
+        AWS_DEFAULT_REGION = credentials("AWS_DEFAULT_REGION")
+        PG_PASSWD = credentials("PG_PASSWD")
+    }
+
     stages {
-        stage('Clone') {
+         stage('Git Clone') {
             steps {
                 git branch: 'main', url: 'https://github.com/rdamrong/terraform-ansible-jenkins.git'
             }
         }
-        stage('Init') {
+        stage('Provisioning') {
             steps {
-                sh label: '', script: 'terraform init -no-color'
+                sh label: 'Terraform init', script: 'echo "no" | TF_INPUT="true" terraform init -backend-config=\"conn_str=postgres://postgres:${PG_PASSWD}@blog.d8k.io/terraform_backend?sslmode=disable\" -no-color'
+                sh label: 'Terraform apply', script: 'terraform apply --auto-approve -no-color'
+                sh label: 'create inventory', script: 'terraform output -raw -no-color server_ip > myinventory'
             }
         }
-        stage('Apply') {
+         stage('Get Playbook') {
             steps {
-                sh label: '', script: 'terraform apply -var="vm_name=$VM_NAME" --auto-approve  -no-color'
+                git branch: 'main', url: 'https://git.d8k.io/student0/awslab.git'
             }
         }
+        stage('Get Info') {
+            steps {
+                sh label: '', script: 'cat myinventory'
+                sh label: '', script: 'cat main.yaml'
+            }
+        }
+        stage('Run ansible-playbook') {
+            steps {
+                ansiblePlaybook credentialsId: 'lab_key', installation: 'myansible', inventory: 'myinventory', playbook: 'main.yaml'
+            }
+        }
+
     }
 }
